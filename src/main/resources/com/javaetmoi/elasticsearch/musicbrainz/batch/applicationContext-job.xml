@@ -37,7 +37,7 @@
   <!-- Read music albums from database then index them into ElasticSearch -->
   <batch:step id="indexMusicAlbumPartition">
     <tasklet transaction-manager="musicBrainzTransactionManager">
-      <chunk reader="musicReleaseReader" processor="musicReleaseProcessor" writer="musicReleaseWriter"
+      <chunk reader="musicAlbumReader" processor="musicAlbumProcessor" writer="musicAlbumWriter"
         commit-interval="${batch.commit.interval}" retry-limit="3">
         <retryable-exception-classes>
           <include class="org.elasticsearch.client.transport.NoNodeAvailableException" />
@@ -208,7 +208,7 @@ where recording.id >= ? and recording.id <= ?
     </property>
   </bean>-->
 
-    <bean id="musicReleaseReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step"
+    <bean id="musicAlbumReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step"
           p:dataSource-ref="musicBrainzDataSource" p:rowMapper-ref="releaseRowMapper">
         <property name="sql">
             <value><![CDATA[
@@ -339,7 +339,7 @@ where release.id >= ? and release.id <= ?
     <!--<bean id="musicAlbumWriter" class="com.javaetmoi.core.batch.item.EsDocumentWriter"
     p:indexName="${es.index}" p:esClient-ref="esClient" p:timeout="${es.index.timeout}" />-->
 
-    <bean id="musicReleaseWriter" class="com.javaetmoi.core.batch.item.EsDocumentWriter"
+    <bean id="musicAlbumWriter" class="com.javaetmoi.core.batch.item.EsDocumentWriter"
     p:indexName="${es.index}" p:esClient-ref="esClient" p:timeout="${es.index.timeout}" />
 
     <!--<bean id="musicAlbumProcessor" class="org.springframework.batch.item.support.CompositeItemProcessor">
@@ -352,7 +352,7 @@ where release.id >= ? and release.id <= ?
     </property>
   </bean>-->
 
-    <bean id="musicReleaseProcessor" class="org.springframework.batch.item.support.CompositeItemProcessor">
+    <bean id="musicAlbumProcessor" class="org.springframework.batch.item.support.CompositeItemProcessor">
         <property name="delegates">
             <list>
                 <!--<bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.EnhanceAlbumProcessor" />-->

@@ -36,13 +36,13 @@ public class EnhanceAlbumProcessor  implements ItemProcessor<Album, Album> {
     @Override
     public Album process(Album album) throws Exception {
         // Add to the album the top five tags
-        /*String sql = "select t.name from release_group_tag rgt "
+        String sql = "select t.name from release_group_tag rgt "
                 +" inner join tag t on rgt.tag = t.id"
                 +" where release_group=?"
                 +" order by rgt.count desc"
                 +" limit 5";
         List<String> tags = jdbcTemplate.queryForList(sql, String.class, album.getId());
-        album.setTags(tags);*/
+        album.setTags(tags);
         return album;
     }
 

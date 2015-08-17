@@ -25,17 +25,15 @@ public class MusicReleaseDocumentProcessor extends EsDocumentProcessor<Release> 
     private String documentType;
 
     @Override protected void fillContentBuilder(XContentBuilder content, Release release) throws IOException {
-        XContentBuilder releaseBuilder = content.startObject("release");
-        releaseBuilder.field("id", release.getId());
-        releaseBuilder.field("gid", release.getGid());
-        releaseBuilder.field("name", release.getName());
+        content.field("id", release.getId());
+        content.field("gid", release.getGid());
+        content.field("name", release.getName());
         if ((release.getTags() != null) && !release.getTags().isEmpty()) {
-            releaseBuilder.array("tags", release.getTags().toArray(new String[release.getTags().size()]));
+            content.array("tags", release.getTags().toArray(new String[release.getTags().size()]));
         }
 
         fillLabeluilder(content, release.getLabel());
         fillAlbumBuilder(content, release.getAlbum());
-        releaseBuilder.endObject();
 
     }
 

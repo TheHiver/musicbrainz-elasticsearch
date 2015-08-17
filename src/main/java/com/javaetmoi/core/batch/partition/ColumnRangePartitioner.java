@@ -24,7 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class ColumnRangePartitioner implements Partitioner {
 
-    private JdbcTemplate jdbcTemplate;
+    private JdbcTemplate  jdbcTemplate;
 
     private String       table;
 
