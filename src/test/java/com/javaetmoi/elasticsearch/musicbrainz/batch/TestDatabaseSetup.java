@@ -13,12 +13,11 @@
  */
 package com.javaetmoi.elasticsearch.musicbrainz.batch;
 
-import static com.ninja_squad.dbsetup.Operations.sequenceOf;
-import static org.junit.Assert.*;
-import java.util.List;
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
-
+import com.javaetmoi.elasticsearch.musicbrainz.batch.mapper.TrackRowMapper;
+import com.javaetmoi.elasticsearch.musicbrainz.domain.Album;
+import com.ninja_squad.dbsetup.DbSetup;
+import com.ninja_squad.dbsetup.destination.DataSourceDestination;
+import com.ninja_squad.dbsetup.operation.Operation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +26,12 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.javaetmoi.elasticsearch.musicbrainz.batch.mapper.AlbumRowMapper;
-import com.javaetmoi.elasticsearch.musicbrainz.domain.Album;
-import com.ninja_squad.dbsetup.DbSetup;
-import com.ninja_squad.dbsetup.destination.DataSourceDestination;
-import com.ninja_squad.dbsetup.operation.Operation;
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.util.List;
+
+import static com.ninja_squad.dbsetup.Operations.sequenceOf;
+import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -98,7 +98,7 @@ public class TestDatabaseSetup {
 				+"	  AND artist_credit.artist_count = 1"
 				+"    AND release_group_secondary_type_join.secondary_type IS NULL"
 				+"    AND	upper(artist_name.name) = 'U2'";
-		 List<Album> albums = musicBrainzJdbcTemplate.query(sql, new AlbumRowMapper());
+		 List<Album> albums = musicBrainzJdbcTemplate.query(sql, new TrackRowMapper());
 		assertEquals(albums.size(), 13);
 
 	}

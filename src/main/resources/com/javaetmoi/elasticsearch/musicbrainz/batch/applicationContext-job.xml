@@ -37,7 +37,7 @@
   <!-- Read music albums from database then index them into ElasticSearch -->
   <batch:step id="indexMusicAlbumPartition">
     <tasklet transaction-manager="musicBrainzTransactionManager">
-      <chunk reader="musicAlbumReader" processor="musicAlbumProcessor" writer="musicAlbumWriter"
+      <chunk reader="musicReleaseReader" processor="musicReleaseProcessor" writer="musicReleaseWriter"
         commit-interval="${batch.commit.interval}" retry-limit="3">
         <retryable-exception-classes>
           <include class="org.elasticsearch.client.transport.NoNodeAvailableException" />
@@ -62,85 +62,313 @@
   <bean id="createIndexMappingTasklet" class="com.javaetmoi.core.batch.tasklet.CreateElasticIndexMappingTasklet"
     p:esClient-ref="esClient" p:indexName="${es.index}" p:indexMapping="${es.mapping.filename}" p:mappingType="${es.mapping.type}" />
 
-  <bean id="musicAlbumReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step"
-    p:dataSource-ref="musicBrainzDataSource" p:rowMapper-ref="albumRowMapper">
+  <!--<bean id="musicAlbumReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step"
+    p:dataSource-ref="musicBrainzDataSource" p:rowMapper-ref="trackRowMapper">
     <property name="sql">
       <value><![CDATA[
-            SELECT 
-                release_group.id AS albumId,                
-                release_group.gid AS albumGid,
-                release_group.type AS albumPrimaryTypeId,
-                release_name.name AS albumName,
-                artist_name.name AS artistName,
-                artist.gid AS artistGid,
-                artist.type as artistTypeId,    
-                artist.begin_date_year artistBeginDateYear,
-                artist.gender as artistGenderId,
-                area.name as artistCountryName,
-                artist_meta.rating artistRatingScore,
-                artist_meta.rating_count artistRatingCount,
-                release_group_meta.first_release_date_year albumYear,
-                release_group_meta.rating albumRatingScore,
-                release_group_meta.rating_count albumRatingCount 
-            FROM
-                artist
-             INNER JOIN artist_credit_name
-                ON artist_credit_name.artist = artist.id
-             INNER JOIN artist_credit
-                ON artist_credit.id = artist_credit_name.artist_credit
-             INNER JOIN release_group
-                ON release_group.artist_credit = artist_credit.id
-             INNER JOIN release_name
-                ON release_name.id = release_group.name
-             INNER JOIN artist_name 
-               ON artist.name = artist_name.id
-             INNER JOIN area
-               ON artist.area = area.id
-             LEFT OUTER JOIN release_group_secondary_type_join
-                ON release_group_secondary_type_join.release_group = release_group.id
-             LEFT OUTER JOIN artist_meta
-                ON artist.id = artist_meta.id    
-             LEFT OUTER JOIN release_group_meta
-                ON release_group_meta.id = release_group.id 
-            WHERE
-                release_group.type = '1'
-                  AND artist_credit.artist_count = 1
-                AND release_group_secondary_type_join.secondary_type IS NULL
-                AND release_group.id >= ? and release_group.id <= ?
+            WITH RECURSIVE nodes(parentId, parentName, childId, childName, path, depth) AS (
+	SELECT
+		r.entity0, p1.name,
+		r.entity1, p2.name,
+		ARRAY[r.entity0], 1
+	FROM
+	(select entity0, entity1 from l_label_label inner join link on l_label_label.link = link.id where link.link_type=200) AS r,
+	label AS p1,
+	label AS p2
+	WHERE r.entity0 in (29, 151, 87262)
+	AND p1.id = r.entity0 AND p2.id = r.entity1
+	UNION ALL
+	SELECT
+		r.entity0, p1.name,
+		r.entity1, p2.name,
+		path || r.entity0, nd.depth + 1
+	FROM
+	(select entity0, entity1 from l_label_label inner join link on l_label_label.link = link.id where link.link_type=200) AS r,
+ 	label AS p1,
+	label AS p2,
+		nodes AS nd
+	WHERE r.entity0 = nd.childId
+	AND p1.id = r.entity0 AND p2.id = r.entity1
+)
+select artist.id as artistid,
+       artist.gid as artistgid,
+       artist.name as artistname,
+       artist.type as artisttypeid,
+       artist_type.name as artisttypename,
+       artist.begin_date_year as artistbegindateyear,
+       artist.gender as artistgenderid,
+       area.name as artistareaname,
+       artist_meta.rating as artistratingscore,
+       artist_meta.rating_count as artistratingcount,
+       tags.tags  as artisttags,
+
+	   release_group.id as albumid,
+       release_group.gid as albumgid,
+       release_group.name as albumname,
+       release_group.type as albumprimarytypeid,
+       release_group_meta.first_release_date_year as albumyear,
+       release_group_meta.rating as albumratingscore,
+       release_group_meta.rating_count as albumratingcount,
+       rgtags.tags as albumtags,
+
+       release.id as releaseid,
+       release.gid as releasegid,
+       release.name as releasename,
+       releasetags.tags as releasetags,
+
+       label.id as labelid,
+       label.gid as labelgid,
+       label.name as labelname,
+       case
+       		when nodes.childId is not null then true
+       		when label.id in (29, 151, 87262) then true
+       		else false
+       	end as major,
+       labeltags.tags as labeltags,
+
+       recording.id as trackid,
+       recording.gid as trackgid,
+       recording.name as trackname,
+       track.position as trackposition,
+       tracktags.tags as tracktags,
+       isrc.isrc as trackisrc
+
+from artist
+inner join artist_credit_name on artist_credit_name.artist = artist.id
+inner join artist_credit on artist_credit.id = artist_credit_name.artist_credit
+inner join release_group on release_group.artist_credit = artist_credit.id
+inner join release on release.release_group = release_group.id
+left outer join release_label on release_label.release = release.id
+inner join label on release_label.label = label.id
+inner join medium on release.id = medium.release
+inner join track on medium.id = track.medium
+inner join recording on recording.id=track.recording
+left outer join area on artist.area = area.id
+inner join release_group_primary_type on release_group_primary_type.id = release_group.type
+left outer join release_group_secondary_type_join on release_group_secondary_type_join.release_group = release_group.id
+left outer join artist_meta on artist.id = artist_meta.id
+inner join artist_type on artist.type = artist_type.id
+left outer join release_group_meta on release_group_meta.id = release_group.id
+left outer join isrc on recording.id = isrc.recording
+
+left outer join
+  (select artist.id as artistid,
+                       string_agg(tag.name,',') as tags
+   from artist
+   inner join artist_tag on artist.id = artist_tag.artist
+   inner join tag on tag.id = artist_tag.tag
+   group by artist.id) tags on artist.id = tags.artistid
+
+left outer join
+  (select release_group.id as release_groupid,
+                       string_agg(tag.name,',') as tags
+   from release_group
+   inner join release_group_tag on release_group.id = release_group_tag.release_group
+   inner join tag on tag.id = release_group_tag.tag
+   group by release_group.id) rgtags on release_group.id = rgtags.release_groupid
+
+left outer join
+  (select recording.id as recordingid,
+                       string_agg(tag.name,',') as tags
+   from recording
+   inner join recording_tag on recording.id = recording_tag.recording
+   inner join tag on tag.id = recording_tag.tag
+   group by recording.id) tracktags on recording.id = tracktags.recordingid
+
+left outer join
+  (select release.id as releaseid,
+                       string_agg(tag.name,',') as tags
+   from release
+   inner join release_tag on release.id = release_tag.release
+   inner join tag on tag.id = release_tag.tag
+   group by release.id) releasetags on release.id = releasetags.releaseid
+
+left outer join
+  (select label.id as labelid,
+                       string_agg(tag.name,',') as tags
+   from label
+   inner join label_tag on label.id = label_tag.label
+   inner join tag on tag.id = label_tag.tag
+   group by label.id) labeltags on label.id = labeltags.labelid
+
+left outer join nodes on label.id = nodes.childId
+where recording.id >= ? and recording.id <= ?
             ]]></value>
     </property>
     <property name="preparedStatementSetter">
       <bean class="org.springframework.batch.core.resource.ListPreparedStatementSetter">
         <property name="parameters">
           <list>
-            <!-- SPeL parameters order is important because it referes to "where release_group >= ? and release_group <= ?" -->
+             SPeL parameters order is important because it referes to "where release_group >= ? and release_group <= ?"
             <value>#{stepExecutionContext[minValue]}</value>
             <value>#{stepExecutionContext[maxValue]}</value>
           </list>
         </property>
       </bean>
     </property>
-  </bean>
+  </bean>-->
 
-  <bean id="musicAlbumWriter" class="com.javaetmoi.core.batch.item.EsDocumentWriter" 
+    <bean id="musicReleaseReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step"
+          p:dataSource-ref="musicBrainzDataSource" p:rowMapper-ref="releaseRowMapper">
+        <property name="sql">
+            <value><![CDATA[
+            WITH RECURSIVE nodes(parentId, parentName, childId, childName, path, depth) AS (
+	SELECT
+		r.entity0, p1.name,
+		r.entity1, p2.name,
+		ARRAY[r.entity0], 1
+	FROM
+	(select entity0, entity1 from l_label_label inner join link on l_label_label.link = link.id where link.link_type=200) AS r,
+	label AS p1,
+	label AS p2
+	WHERE r.entity0 in (29, 151, 87262)
+	AND p1.id = r.entity0 AND p2.id = r.entity1
+	UNION ALL
+	SELECT
+		r.entity0, p1.name,
+		r.entity1, p2.name,
+		path || r.entity0, nd.depth + 1
+	FROM
+	(select entity0, entity1 from l_label_label inner join link on l_label_label.link = link.id where link.link_type=200) AS r,
+ 	label AS p1,
+	label AS p2,
+		nodes AS nd
+	WHERE r.entity0 = nd.childId
+	AND p1.id = r.entity0 AND p2.id = r.entity1 -- AND depth < 2
+)
+select artist.id as artistid,
+       artist.gid as artistgid,
+       artist.name as artistname,
+       artist.type as artisttypeid,
+       artist_type.name as artisttypename,
+       artist.begin_date_year as artistbegindateyear,
+       artist.gender as artistgenderid,
+       area.name as artistareaname,
+       artist_meta.rating as artistratingscore,
+       artist_meta.rating_count as artistratingcount,
+       tags.tags  as artisttags,
+
+	   release_group.id as albumid,
+       release_group.gid as albumgid,
+       release_group.name as albumname,
+       release_group.type as albumprimarytypeid,
+       release_group_primary_type.name as albumprimarytypename,
+       release_group_meta.first_release_date_year as albumyear,
+       release_group_meta.rating as albumratingscore,
+       release_group_meta.rating_count as albumratingcount,
+       rgtags.tags as albumtags,
+
+       release.id as releaseid,
+       release.gid as releasegid,
+       release.name as releasename,
+       releasetags.tags as releasetags,
+
+       label.id as labelid,
+       label.gid as labelgid,
+       label.name as labelname,
+       case
+       		when nodes.childId is not null then true
+       		when label.id in (29, 151, 87262) then true
+       		else false
+       	end as major,
+       labeltags.tags as labeltags
+
+from artist
+inner join artist_credit_name on artist_credit_name.artist = artist.id
+inner join artist_credit on artist_credit.id = artist_credit_name.artist_credit
+inner join release_group on release_group.artist_credit = artist_credit.id
+inner join release on release.release_group = release_group.id
+left outer join release_label on release_label.release = release.id
+left outer join label on release_label.label = label.id
+left outer join area on artist.area = area.id
+left outer join release_group_primary_type on release_group_primary_type.id = release_group.type
+left outer join artist_meta on artist.id = artist_meta.id
+left outer join artist_type on artist.type = artist_type.id
+left outer join release_group_meta on release_group_meta.id = release_group.id
+
+left outer join
+  (select artist.id as artistid,
+                       string_agg(tag.name,',') as tags
+   from artist
+   inner join artist_tag on artist.id = artist_tag.artist
+   inner join tag on tag.id = artist_tag.tag
+   group by artist.id) tags on artist.id = tags.artistid
+
+left outer join
+  (select release_group.id as release_groupid,
+                       string_agg(tag.name,',') as tags
+   from release_group
+   inner join release_group_tag on release_group.id = release_group_tag.release_group
+   inner join tag on tag.id = release_group_tag.tag
+   group by release_group.id) rgtags on release_group.id = rgtags.release_groupid
+
+left outer join
+  (select release.id as releaseid,
+                       string_agg(tag.name,',') as tags
+   from release
+   inner join release_tag on release.id = release_tag.release
+   inner join tag on tag.id = release_tag.tag
+   group by release.id) releasetags on release.id = releasetags.releaseid
+
+left outer join
+  (select label.id as labelid,
+                       string_agg(tag.name,',') as tags
+   from label
+   inner join label_tag on label.id = label_tag.label
+   inner join tag on tag.id = label_tag.tag
+   group by label.id) labeltags on label.id = labeltags.labelid
+
+left outer join nodes on label.id = nodes.childId
+where release.id >= ? and release.id <= ?
+            ]]></value>
+        </property>
+        <property name="preparedStatementSetter">
+            <bean class="org.springframework.batch.core.resource.ListPreparedStatementSetter">
+                <property name="parameters">
+                    <list>
+                        <!-- SPeL parameters order is important because it referes to "where release_group >= ? and release_group <= ?" -->
+                        <value>#{stepExecutionContext[minValue]}</value>
+                        <value>#{stepExecutionContext[maxValue]}</value>
+                    </list>
+                </property>
+            </bean>
+        </property>
+    </bean>
+
+
+    <!--<bean id="musicAlbumWriter" class="com.javaetmoi.core.batch.item.EsDocumentWriter"
+    p:indexName="${es.index}" p:esClient-ref="esClient" p:timeout="${es.index.timeout}" />-->
+
+    <bean id="musicReleaseWriter" class="com.javaetmoi.core.batch.item.EsDocumentWriter"
     p:indexName="${es.index}" p:esClient-ref="esClient" p:timeout="${es.index.timeout}" />
-    
-  <bean id="musicAlbumProcessor" class="org.springframework.batch.item.support.CompositeItemProcessor"> 
-    <property name="delegates">
-        <list>
-            <bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.EnhanceAlbumProcessor" />
-            <bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.MusicAlbumDocumentProcessor"
+
+    <!--<bean id="musicAlbumProcessor" class="org.springframework.batch.item.support.CompositeItemProcessor">
+     <property name="delegates">
+         <list>
+             <bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.EnhanceAlbumProcessor" />
+            <bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.MusicTrackDocumentProcessor"
                 p:documentType="${es.mapping.type}" />
         </list>
     </property>
-  </bean>
-  
+  </bean>-->
 
-  <!-- The partitioner finds the minimum and maximum primary keys in the music album table to obtain a count of rows and 
-    then calculates the number of rows in the partition -->
+    <bean id="musicReleaseProcessor" class="org.springframework.batch.item.support.CompositeItemProcessor">
+        <property name="delegates">
+            <list>
+                <!--<bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.EnhanceAlbumProcessor" />-->
+                <bean class="com.javaetmoi.elasticsearch.musicbrainz.batch.item.MusicReleaseDocumentProcessor"
+                      p:documentType="${es.mapping.type}" />
+            </list>
+        </property>
+    </bean>
+
+
+
+    <!-- The partitioner finds the minimum and maximum primary keys in the music album table to obtain a count of rows and
+      then calculates the number of rows in the partition -->
   <bean id="partitionerMusicAlbum" class="com.javaetmoi.core.batch.partition.ColumnRangePartitioner">
     <property name="dataSource" ref="musicBrainzDataSource" />
-    <property name="table" value="release_group" />
+    <property name="table" value="release" />
     <property name="column" value="id" />
   </bean>
 

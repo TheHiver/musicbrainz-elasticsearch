@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import com.javaetmoi.elasticsearch.musicbrainz.domain.Album;
 import com.javaetmoi.elasticsearch.musicbrainz.domain.Artist;
 
-import fm.last.musicbrainz.data.model.ArtistType;
 import fm.last.musicbrainz.data.model.Gender;
 import fm.last.musicbrainz.data.model.ReleaseGroupPrimaryType;
 
@@ -35,7 +34,8 @@ public class AlbumRowMapper implements RowMapper<Album> {
         album.setId(rs.getInt("albumId"));
         album.setGid(rs.getString("albumGid"));
         album.setName(rs.getString("albumName"));
-        album.setType(ReleaseGroupPrimaryType.valueOf(rs.getInt("albumPrimaryTypeId")));
+        album.setTypeId(rs.getInt("albumPrimaryTypeId"));
+        album.setTypeName(rs.getString("albumPrimaryTypeName"));
         album.setYear(rs.getInt("albumYear"));
         album.getRating().setScore(rs.getInt("albumRatingScore"));
         album.getRating().setCount(rs.getInt("albumRatingCount"));
@@ -45,12 +45,15 @@ public class AlbumRowMapper implements RowMapper<Album> {
         artist.setName(rs.getString("artistName"));
         artist.setBeginDateYear(rs.getString("artistBeginDateYear"));
         if (rs.getObject("artistTypeId") != null) {
-            artist.setType(ArtistType.valueOf(rs.getInt("artistTypeId")));
+            artist.setTypeId(rs.getInt("artistTypeId"));
+        }
+        if (rs.getObject("artistTypeName") != null) {
+            artist.setTypeName(rs.getString("artistTypeName"));
         }
         if (rs.getObject("artistGenderId") != null) {
             artist.setGender(Gender.valueOf(rs.getInt("artistGenderId")));
         }
-        artist.setCountry(rs.getString("artistCountryName"));
+        artist.setArea(rs.getString("artistCountryName"));
         artist.getRating().setScore(rs.getInt("artistRatingScore"));
         artist.getRating().setCount(rs.getInt("artistRatingCount"));
 

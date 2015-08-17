@@ -55,18 +55,18 @@
     <!-- Version of third libraries -->
     <version.logback>1.1.1</version.logback>
     <version.slf4j>1.7.6</version.slf4j>
-    <version.spring-framework>4.0.1.RELEASE</version.spring-framework>
+    <version.spring-framework>4.2.0.RELEASE</version.spring-framework>
     <version.commons-lang3>3.2.1</version.commons-lang3>
-    <version.spring-batch>3.0.0.RELEASE</version.spring-batch>
+    <version.spring-batch>3.0.5.RELEASE</version.spring-batch>
     <version.commons-io>2.4</version.commons-io>
     <version.musicbrainz-data>3.1.0</version.musicbrainz-data>
 
     <!-- Version of ElasticSearch -->
-    <version.elasticsearch>1.1.0</version.elasticsearch>
-    <version.spring-elasticsearch>1.0.0</version.spring-elasticsearch>
+    <version.elasticsearch>1.4.4</version.elasticsearch>
+    <version.spring-elasticsearch>1.4.2</version.spring-elasticsearch>
 
     <!-- Database -->
-    <version.postgresql>9.1-901-1.jdbc4</version.postgresql>
+    <version.postgresql>9.4-1200-jdbc41</version.postgresql>
 
     <!-- * For testing purpose -->
     <version.junit>4.11</version.junit>
@@ -177,7 +177,7 @@
 
     <!-- Database -->
     <dependency>
-      <groupId>postgresql</groupId>
+      <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>${version.postgresql}</version>
       <scope>runtime</scope>
@@ -203,6 +203,12 @@
       <artifactId>jcl-over-slf4j</artifactId>
       <version>${version.slf4j}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.3</version>
+    </dependency>
+
 
     <!-- Tests -->
     <!-- * H2 Embbeded database -->
@@ -245,8 +251,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${version.plugin.maven-compiler-plugin}</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <encoding>${source.encoding}</encoding>
         </configuration>
       </plugin>
@@ -263,7 +269,7 @@
         <artifactId>maven-source-plugin</artifactId>
         <version>${version.plugin.maven-source-plugin}</version>
         <configuration>
-          <encoding>${source.encoding}</encoding>
+          <!--<encoding>${source.encoding}</encoding>-->
         </configuration>
       </plugin>
       <plugin>

@@ -1,11 +1,11 @@
 /**
  * Copyright 2013 the original author or authors.
- * 
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -13,11 +13,12 @@
  */
 package com.javaetmoi.core.batch.item;
 
+
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 /**
  * JSON document which is stored in Elasticsearch.
- * 
+ *
  * <p>
  * A document is stored in an <b>index</b> and has a <b>type</b> and an <b>id</b>.<br>
  * If no id is provided, Elasticsearch well auto-generated one.<br>
@@ -26,17 +27,17 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
  */
 public class EsDocument {
 
-    private String          id;
+    private String id;
 
-    private String          type;
+    private String type;
 
-    private Long            version;
+    private Long version;
 
     private XContentBuilder contentBuilder;
 
     /**
      * EsDocument constructor.
-     * 
+     *
      * @param type
      *            type of the Elasticsearch document
      * @param contentBuilder
@@ -53,7 +54,7 @@ public class EsDocument {
 
     /**
      * Set the ID of a document which identifies a document.
-     * 
+     *
      * @param id
      *            ID of a document (may be <code>null</code>)
      */
@@ -72,7 +73,7 @@ public class EsDocument {
     /**
      * Sets the version, which will cause the index operation to only be performed if a matching
      * version exists and no changes happened on the doc since then.
-     * 
+     *
      * @param version
      *            version of a document
      * @see http://www.elasticsearch.org/blog/versioning/
@@ -80,9 +81,9 @@ public class EsDocument {
     protected void setVersion(Long version) {
         this.version = version;
     }
-    
+
     protected boolean isVersioned() {
-        return version !=null;
+        return version != null;
     }
 
     public Long getVersion() {

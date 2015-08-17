@@ -1,0 +1,194 @@
+{
+  "release": {
+    "_source": {
+      "enabled": "true",
+      "compress": "true"
+    },
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "gid": {
+        "type": "string",
+        "analyzer": "myIdAnalyzer"
+      },
+      "name": {
+        "type": "multi_field",
+        "fields": {
+          "name": {
+            "type": "string",
+            "analyzer": "myStandardAnalyzer"
+          },
+          "start": {
+            "search_analyzer": "myStandardAnalyzer",
+            "index_analyzer": "myPartialNameAnalyzer",
+            "type": "string"
+          }
+        }
+      },
+      "tags": {
+        "type": "string",
+        "index_name": "tag"
+      },
+      "label": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "gid": {
+            "type": "string",
+            "analyzer": "myIdAnalyzer"
+          },
+          "name": {
+            "type": "multi_field",
+            "fields": {
+              "name": {
+                "type": "string",
+                "analyzer": "myStandardAnalyzer"
+              },
+              "start": {
+                "search_analyzer": "myStandardAnalyzer",
+                "index_analyzer": "myPartialNameAnalyzer",
+                "type": "string"
+              }
+            }
+          },
+          "major": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "string",
+            "index_name": "tag"
+          }
+        }
+      },
+      "album": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "gid": {
+            "type": "string",
+            "analyzer": "myIdAnalyzer"
+          },
+          "name": {
+            "type": "multi_field",
+            "fields": {
+              "name": {
+                "type": "string",
+                "analyzer": "myStandardAnalyzer"
+              },
+              "start": {
+                "search_analyzer": "myStandardAnalyzer",
+                "index_analyzer": "myPartialNameAnalyzer",
+                "type": "string"
+              }
+            }
+          },
+          "type_id": {
+            "type": "integer"
+          },
+          "type_name": {
+            "type": "multi_field",
+            "fields": {
+              "type_name": {
+                "type": "string",
+                "analyzer": "myStandardAnalyzer"
+              },
+              "type_start": {
+                "search_analyzer": "myStandardAnalyzer",
+                "index_analyzer": "myPartialNameAnalyzer",
+                "type": "string"
+              }
+            }
+          },
+          "year": {
+            "type": "multi_field",
+            "fields": {
+              "year": {
+                "type": "date",
+                "format": "year"
+              },
+              "string": {
+                "type": "string",
+                "analyzer": "myBasicAnalyzer"
+              }
+            }
+          },
+          "rating": {
+            "type": "nested",
+            "properties": {
+              "score": {
+                "type": "integer"
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          },
+          "tags": {
+            "type": "string",
+            "index_name": "tag"
+          },
+          "artist": {
+            "type": "nested",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "gid": {
+                "type": "string",
+                "analyzer": "myIdAnalyzer"
+              },
+              "name": {
+                "type": "multi_field",
+                "fields": {
+                  "name": {
+                    "type": "string",
+                    "analyzer": "myStandardAnalyzer"
+                  },
+                  "start": {
+                    "search_analyzer": "myStandardAnalyzer",
+                    "index_analyzer": "myPartialNameAnalyzer",
+                    "type": "string"
+                  }
+                }
+              },
+              "type_id": {
+                "type": "integer"
+              },
+              "type_name": {
+                "type": "string"
+              },
+              "begin_date_year": {
+                "type": "date",
+                "format": "year"
+              },
+              "country_name": {
+                "type": "string",
+                "analyzer": "myStandardAnalyzer"
+              },
+              "gender": {
+                "type": "string",
+                "analyzer": "myBasicAnalyzer"
+              },
+              "rating": {
+                "type": "nested",
+                "properties": {
+                  "score": {
+                    "type": "integer"
+                  },
+                  "count": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
